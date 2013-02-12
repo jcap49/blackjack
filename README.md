@@ -1,6 +1,6 @@
 # Blackjack
 
-TODO: Write a gem description
+This is a simple Blackjack game I created to test my Ruby skillz.
 
 ## Installation
 
@@ -18,7 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Gamble a little. All the fun, none of the risk :)
 
 ## Contributing
 
