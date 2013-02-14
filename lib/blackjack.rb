@@ -11,6 +11,9 @@ require './player'
 @dealer = Dealer.new
 @player = Player.new
 
+# define the value of a hand 
+
+
 # define a "Game Over" message
 def game_over
 	puts "Sorry - looks like you lost"
@@ -74,7 +77,7 @@ def game_prompt
 end
 game_prompt
 
-# game begins prompt
+# game begins 
 puts ""
 puts ""
 puts "We're now going to begin the game."
@@ -90,6 +93,10 @@ puts ""
 2.times { @player.hand << @deck.deal }
 print "You're holding: "
 @player.hand.each { |card_face, card_value| print card_face + " " }
+
+puts "You're hand value is: "
+print @player.hand.inject(0) { |result, element| result + element }
+
 
 
 
