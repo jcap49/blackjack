@@ -1,3 +1,5 @@
+require './deck'
+
 class AbstractPlayer
 
 	attr_accessor :hand
@@ -6,17 +8,20 @@ class AbstractPlayer
 		@hand = []
 	end
 
-
-	def busted?
-		if hand_value() > 21
-			puts "Sorry, you've busted."
-		else 
-			puts "You're good to go"
-		end
+	# define the value of player's hand 
+	def hand_value
+		hand.collect{|pair| pair[1]}
+		hand.collect{|pair| pair[1]}.collect(&:to_i)
+		hand.collect{|pair| pair[1]}.collect(&:to_i).inject(:+)
 	end
 
-	def hand_value
-		hand.values.inject(0) {|sum, x| sum + x[1]}
+	# define when a hand busts
+	def player_busted?
+		if hand_value > 21
+			puts "Sorry - you busted."
+			return game_over
+		else
+		end
 	end
 
 end
@@ -28,8 +33,19 @@ end
 class Dealer < AbstractPlayer
 
 	def must_stay?
-		hand_value >= 17
+		if hand_value == (17..21)
+			puts "Alright, the dealer stays."
+		else
+		end
 	end
+
+	def dealer_busted?
+		if hand_value > 21
+			puts "The dealer busted."
+			return game_won
+		else
+		end
+	end	
 
 	def hit(hand_value)
 		if hand_value <= 16

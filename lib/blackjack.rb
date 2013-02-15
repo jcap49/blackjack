@@ -11,42 +11,6 @@ require './player'
 @dealer = Dealer.new
 @player = Player.new
 
-# define the value of player's hand 
-def player_hand_value
-	@player.hand.collect{|pair| pair[1]}
-	@player.hand.collect{|pair| pair[1]}.collect(&:to_i)
-	@player.hand.collect{|pair| pair[1]}.collect(&:to_i).inject(:+)
-end
-
-# define the value of dealer's hand
-def dealer_hand_value
-	@dealer.hand.collect{|pair| pair[1]}
-	@dealer.hand.collect{|pair| pair[1]}.collect(&:to_i)
-	@dealer.hand.collect{|pair| pair[1]}.collect(&:to_i)
-end
-
-# define a busted player hand
-def player_busted?
-	if player_hand_value > 21
-		puts "Sorry, you've busted."
-		return game_over
-	else 
-	end
-end
-
-# define a busted dealer hand
-def dealer_busted?
-	if dealer_hand_value > 21
-		puts "The dealer has busted."
-		return game_won
-	end
-end
-
-# define dealer must stay
-def dealer_must_stay?
-	hand_value.to_i >= 17
-	puts "Alright, the dealer stays."
-end
 
 
 # define a "Game Over" message
@@ -73,7 +37,7 @@ end
 
 # define a "Blackjack" message
 def blackjack
-	hand_value == 21
+	@player.hand_value || @dealer.hand_value == 21
 	puts "Oh shit - blackjack baby!"
 end
 
@@ -135,7 +99,7 @@ print "You're holding: "
 
 
 # Let the player play
-def player_game_play
+
 	player_stayed = false
 	begin
 		puts ""
@@ -150,8 +114,8 @@ def player_game_play
 			print "You're now holding: "
 			@player.hand.each { |card_face, card_value| print card_face + " " }
 
-			unless busted? 
-				player_game_play
+			unless @player.player_busted? 
+				@player.hand << @deck.deal
 			else
 				game_over
 			end
@@ -160,12 +124,12 @@ def player_game_play
 			player_stayed = true
 		else
 			puts "Please respond with either 'h' for hit or 's' for stay."
-			player_game_play
+			
 		end
 
-	end until player_stayed || @player.hand.busted?
-end
-player_game_play
+	end until player_stayed || @player.player_busted?
+
+
 
 puts "Now the dealer's turn begins."
 
@@ -175,12 +139,17 @@ puts "Now the dealer's turn begins."
 # dealer needs to "look" at cards then either hit or stay/reveal
 begin
 	puts " "
-	puts "Hmmm let me see here..."
-	1.times do @dealer.hand << @deck.deal 
-	end
-	@dealer.hand.inspect
+	puts "-- dealer is checking his cards --"
 
-end until @dealer.dealer_busted? || @dealer.dealer_must_stay?
+	puts " "
+
+	unless @dealer.dealer_busted? || @dealer.must_stay?
+		@dealer.hand << @deck.deal
+	else
+		game_won
+	end
+	
+end until @dealer.dealer_busted? || @dealer.must_stay?
 
 # Figure out who won
 puts "Time to see who won the hand"
@@ -189,15 +158,18 @@ response = gets.chomp()
 puts ""
 @player.hand.each { |card_face, card_value| print card_face + " " }
 puts ""
-puts "And I've got: "
+puts "And the dealer has: "
 @dealer.hand.each { |card_face, card_value| print card_face + " " }
 
 if @player.hand.to_i > @dealer.hand.to_i
 	puts "Congratulations #{name}! Looks like you won!"
+	game_won
 elsif @player.hand.to_i < @dealer.hand.to_i
 	puts "Heavy scheiss man - looks like I won this time."
+	game_over
 elsif @player.hand.to_i == @dealer.hand.to_i 
 	puts "Boom - we're split."
+	game_over
 else
 	"What next?"
 end
