@@ -1,181 +1,148 @@
 require './deck'
 require './player'
 
-# Instantiate a deck
-@deck = Deck.new
+class Game
+	attr_accessor :name
 
-# Shuffle the deck
-@deck.shuffle
+	def play!
+		# Instantiate a deck
+		@deck = Deck.new
 
-# Instantiate a dealer and a player
-@dealer = Dealer.new
-@player = Player.new
+		# Shuffle the deck
+		@deck.shuffle
 
+		# Instantiate a dealer and a player
+		@dealer = Dealer.new
+		@player = Player.new
+		
+		puts "Welcome to the Elepath Casino! Please type your name:"
 
-
-# define a "Game Over" message
-def game_over
-	puts "Game Over."
-	Process.exit(1)
-end
-
-# define a "Game won" message
-def game_won
-	puts "Congratulations - looks like you won!"
-	puts "Would you like to play again?"
-	response = gets.chomp
-
-	if response.capitalize == "Yes"
-		game_prompt
-	elsif response.capitalize == "No"
-		puts "Sounds good - catch you later."
-		Process.exit(1)
-	else
-		puts "Please respond with either a yes or a no."
-	end
-end
-
-# define a "Blackjack" message
-def blackjack
-	@player.hand_value || @dealer.hand_value == 21
-	puts "Oh shit - blackjack baby!"
-end
-
-
-# welcome message and prompt to begin game
-def game_prompt
-	puts "Welcome to the Elepath Casino - are you ready to play?"
-
-	response = gets.chomp()
-	puts ""
-	puts ""
-
-	if response.capitalize == "Yes"
-		puts "Great, before we begin please tell me your name."
-
-		name = gets.chomp()
-
-		if name == "" 
+		# Get the user's name
+		self.name = get_user_input
+		if self.name == "" 
 			puts "Great to have you Anonymous Player."
 		else
-			puts ""
-			puts ""
-			puts "Great to have you #{name}!"
+			puts "Great to have you #{self.name}!"
 		end
 
-	elsif response.capitalize == "No"
-		puts "Sorry to hear that - come again soon."
-		Process.exit(1)
-	else
-		puts "Please answer with a yes or a no."
+		puts "We're now going to begin the game."
+
 		puts ""
 		puts ""
-		game_prompt
-		
+		puts "The cards are being dealt..."
+
+		# Deal cards
+		2.times { @player.hand << @deck.deal }
+		print "You're holding: "
+		@player.hand.each { |card_face, card_value| print card_face + " " }
+
+		# Deal cards to the dealer
+		2.times { @dealer.hand << @deck.deal }
+
+		puts ""
+		puts ""
+
+		# Now run a game loop for the player and dealer
+		run_player_loop
+		run_dealer_loop
+
+		score_game
+
+		puts "Want to play again? Type (Y)es or (N)o"
+
 	end
-end
-game_prompt
 
-# game begins 
-puts ""
-puts ""
-puts "We're now going to begin the game."
+	def play_again?
+		result = get_user_input
+		result.downcase == 'y'
+	end
 
-puts ""
-puts ""
-puts "The cards are being dealt..."
+	def get_user_input
+		gets.chomp()
+	end
 
-puts ""
-puts ""
+	def run_player_loop
+		player_stayed = false
+		begin
+			puts ""
+			puts ""
+			puts "Would you like to hit or stay? Press 'h' for hit or 's' for stay."
+			response = get_user_input
 
-# Deal cards to the player
-2.times { @player.hand << @deck.deal }
-print "You're holding: "
-@player.hand.each { |card_face, card_value| print card_face + " " }
+			puts "" 
 
-# Deal cards to the dealer
-2.times { @dealer.hand << @deck.deal }
-
-
-
-# Let the player play
-
-	player_stayed = false
-	begin
-		puts ""
-		puts ""
-		puts "Would you like to hit or stay? Press 'h' for hit or 's' for stay."
-		response = gets.chomp()
-
-		puts "" 
-
-		if response.capitalize == "H"
-			@player.hand << @deck.deal
-			print "You're now holding: "
-			@player.hand.each { |card_face, card_value| print card_face + " " }
-
-			unless @player.player_busted? 
+			if response.capitalize == "H"
 				@player.hand << @deck.deal
+				print "You're now holding: "
+				@player.hand.each { |card_face, card_value| print card_face + " " }
+			elsif response.capitalize == "S"
+				player_stayed = true
 			else
-				game_over
+				puts "Please respond with either 'h' for hit or 's' for stay."
+				
 			end
 
-		elsif response.capitalize == "S"
-			player_stayed = true
-		else
-			puts "Please respond with either 'h' for hit or 's' for stay."
+		end until player_stayed || @player.player_busted?
+
+		puts "Your hand is over. Dealer's turn!"
+	end
+
+	def run_dealer_loop
+		begin
+			puts " "
+			puts "-- dealer is checking his cards --"
+			puts " "
+
+			unless @dealer.must_stay? || @dealer.player_busted?
+				@dealer.hand << @deck.deal
+			end
+
 			
+		end until @dealer.must_stay? || @dealer.player_busted?
+
+		puts "Dealer's hand is over. They had:"
+		puts @dealer.hand.collect{|c| c[1]}.join(' ')
+		puts ""
+	end
+
+	def score_game
+		# Check for blackjack
+		if @player.blackjack?
+			puts "Blackjack!"
+			return
+		elsif @dealer.blackjack?
+			puts "Dealer blackjack!"
+			return
 		end
 
-	end until player_stayed || @player.player_busted?
+		# Check for busts
+		if @player.player_busted?
+			puts "You busted."
+			return
+		elsif @dealer.player_busted?
+			puts "The dealer busted."
+			return
+		end
 
-
-
-puts "Now the dealer's turn begins."
-
-
-# Let the dealer play now that the player is finished
-
-# dealer needs to "look" at cards then either hit or stay/reveal
-begin
-	puts " "
-	puts "-- dealer is checking his cards --"
-
-	puts " "
-
-	unless @dealer.dealer_busted? || @dealer.must_stay?
-		@dealer.hand << @deck.deal
-	else
-		game_won
+		# No blackjack or busts; score game
+		if @player.hand_value > @dealer.hand_value
+			puts "Congratulations #{self.name}! Looks like you won!"
+		elsif @player.hand_value < @dealer.hand_value
+			puts "Heavy scheiss man - looks like the dealer won this time."
+		elsif @player.hand_value == @dealer.hand_value 
+			puts "Boom - we're split."
+		else
+			puts "What next?"
+		end
 	end
-	
-end until @dealer.dealer_busted? || @dealer.must_stay?
-
-# Figure out who won
-puts "Time to see who won the hand"
-puts "Press [enter] to reveal your hand"
-response = gets.chomp()
-puts ""
-@player.hand.each { |card_face, card_value| print card_face + " " }
-puts ""
-puts "And the dealer has: "
-@dealer.hand.each { |card_face, card_value| print card_face + " " }
-
-if @player.hand.to_i > @dealer.hand.to_i
-	puts "Congratulations #{name}! Looks like you won!"
-	game_won
-elsif @player.hand.to_i < @dealer.hand.to_i
-	puts "Heavy scheiss man - looks like I won this time."
-	game_over
-elsif @player.hand.to_i == @dealer.hand.to_i 
-	puts "Boom - we're split."
-	game_over
-else
-	"What next?"
 end
 
-		
+begin
+	game = Game.new
+	game.play!
+end while game.play_again?
 
 
 
+Process.exit(1)
 
