@@ -20,7 +20,7 @@ class AbstractPlayer
 
 	def blackjack?
 		# TODO refactor so that blackjack is only 21 from the first 2 cards
-		hand_value == 21
+		hand_value[0,1] == 21
 	end
 
 end

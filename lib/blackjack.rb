@@ -26,7 +26,6 @@ class Game
 		end
 
 		puts "We're now going to begin the game."
-
 		puts ""
 		puts ""
 		puts "The cards are being dealt..."
@@ -84,6 +83,10 @@ class Game
 
 		end until player_stayed || @player.player_busted?
 
+		if @player.player_busted?
+			puts "You busted. Game over - would you like to play again?"
+		end
+
 		puts "Your hand is over. Dealer's turn!"
 	end
 
@@ -93,9 +96,9 @@ class Game
 			puts "-- dealer is checking his cards --"
 			puts " "
 
-			unless @dealer.must_stay? || @dealer.player_busted?
+				
 				@dealer.hand << @deck.deal
-			end
+		
 
 			
 		end until @dealer.must_stay? || @dealer.player_busted?
