@@ -5,30 +5,21 @@ class Game
 	attr_accessor :name
 
 	def play!
-		# Instantiate a deck
-		@deck = Deck.new
+		include './game_text'
+		include './game_functions'
 
-		# Shuffle the deck
+		@deck = Deck.new
 		@deck.shuffle
 
-		# Instantiate a dealer and a player
 		@dealer = Dealer.new
 		@player = Player.new
+
+		welcome_text
+		get_user_name
+		game_begins_text
 		
-		puts "Welcome to the Elepath Casino! Please type your name:"
 
-		# Get the user's name
-		self.name = get_user_input
-		if self.name == "" 
-			puts "Great to have you Anonymous Player."
-		else
-			puts "Great to have you #{self.name}!"
-		end
-
-		puts "We're now going to begin the game."
-		puts ""
-		puts ""
-		puts "The cards are being dealt..."
+		
 
 		# Deal cards
 		2.times { @player.hand << @deck.deal }
@@ -36,7 +27,7 @@ class Game
 		@player.hand.each { |card_face, card_value| print card_face + " " }
 
 		# Deal cards to the dealer
-		2.times { @dealer.hand << @deck.deal }
+		
 
 		puts ""
 		puts ""
@@ -58,6 +49,15 @@ class Game
 
 	def get_user_input
 		gets.chomp()
+	end
+
+	def get_user_name
+		name = get_user_input
+		if name == "" 
+			puts "Great to have you Anonymous Player."
+		else
+			puts "Great to have you #{self.name}!"
+		end
 	end
 
 	def run_player_loop
@@ -98,8 +98,6 @@ class Game
 
 				
 				@dealer.hand << @deck.deal
-		
-
 			
 		end until @dealer.must_stay? || @dealer.player_busted?
 
